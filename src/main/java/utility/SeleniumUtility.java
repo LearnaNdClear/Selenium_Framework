@@ -3,9 +3,10 @@ package utility;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.net.URL;
 import java.util.Properties;
 import java.util.Set;
@@ -18,12 +19,13 @@ import javax.mail.Store;
 import javax.mail.internet.InternetAddress;
 import javax.mail.search.FromTerm;
 import javax.mail.search.SearchTerm;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.cos.COSDocument;
+import org.apache.pdfbox.io.RandomAccessBuffer;
 import org.apache.pdfbox.pdfparser.PDFParser;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.util.PDFTextStripper;
+import org.apache.pdfbox.text.PDFTextStripper;
+import org.fit.pdfdom.PDFDomTree;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.OutputType;
@@ -238,10 +240,8 @@ public class SeleniumUtility {
 			File file = ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
 			FileUtils.copyFile(file, new File("C:\\Users\\njayapal\\Desktop\\screenShot.png"));
 		} catch (WebDriverException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -291,7 +291,7 @@ public class SeleniumUtility {
 		boolean blnTxtPresent =false;
 		try {
 			BufferedInputStream file = new BufferedInputStream(new FileInputStream(new File(filePath)));
-			PDFParser parser = new PDFParser(file);			
+			PDFParser parser = new PDFParser(new RandomAccessBuffer(file));		
 			parser.parse();
 			COSDocument cosDoc = parser.getDocument();
 			PDFTextStripper pdfStripper = new PDFTextStripper();
@@ -320,13 +320,14 @@ public class SeleniumUtility {
 		boolean blnTxtPresent =false;
 		try {
 			
-			/*Add url Proxy details if you any and uncomment it
-			System.setProperty("http.proxyHost", "127.0.0.1");
-		    System.setProperty("http.proxyPort","3128");*/
+			/*Add url Proxy details if you any and uncomment it */
+			System.setProperty("http.proxyHost", "192.168.5.100");
+		    System.setProperty("http.proxyPort","3128");
+		   
 			
 			URL url = new URL(pdfUrl);
-			BufferedInputStream file = new BufferedInputStream(url.openStream()); 
-			PDFParser parser = new PDFParser(file);			
+			BufferedInputStream file = new BufferedInputStream(url.openStream()); 			
+			PDFParser parser = new PDFParser(new RandomAccessBuffer(file));
 			parser.parse();
 			COSDocument cosDoc = parser.getDocument();
 			PDFTextStripper pdfStripper = new PDFTextStripper();
@@ -437,4 +438,49 @@ public class SeleniumUtility {
 		driver.get(System.getProperty("user.dir") +"/" + dir + "/" + fileName);
 	}
 
+	/**
+	 * Convert PDF file to HTML file 
+	 * @param inputfile
+	 * @param outputFile
+	 */
+	public void pdftoHtml(String inputfile, String outputFile) {
+		PDDocument document = null;
+		try {
+			document = PDDocument.load(new File(inputfile), "");
+			PDFDomTree parser = new PDFDomTree();
+			Writer output = new PrintWriter(outputFile, "utf-8");
+			parser.writeText(document, output);
+			output.close();
+		} catch (Exception e) {
+			System.out.println("Unable to parse the PDF");
+		}
+		 
+	}
+	
+	/**
+	 * Convert PDF from URL to HTML file 
+	 * @param inputfile
+	 * @param outputFile
+	 */
+	public void pdftoHtmlfromUrl(String pdfUrl, String outputFile) {
+		PDDocument document = null;
+		try {
+			
+			/*Add url Proxy details if you any and uncomment it */
+			System.setProperty("http.proxyHost", "192.168.5.100");
+		    System.setProperty("http.proxyPort","3128");		   
+			
+			URL url = new URL(pdfUrl);
+			BufferedInputStream file = new BufferedInputStream(url.openStream()); 
+						
+			document = PDDocument.load(file, "");
+			PDFDomTree parser = new PDFDomTree();
+			Writer output = new PrintWriter(outputFile, "utf-8");
+			parser.writeText(document, output);
+			output.close();
+		} catch (Exception e) {
+			System.out.println("Unable to parse the PDF");
+		}
+		 
+	}
 }
